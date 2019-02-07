@@ -7,13 +7,19 @@
 
 #pragma once
 
+#include <iostream>
 #include <string>
 
-#include <frc/Joystick.h>
+#include "ctre/Phoenix.h"
+
+#include <frc/WPILib.h>
+#include <frc/drive/DifferentialDrive.h>
+#include <frc/XboxController.h>
 #include <frc/PWMVictorSPX.h>
 #include <frc/SampleRobot.h>
-#include <frc/drive/DifferentialDrive.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/Timer.h>
 
 /**
  * This is a demo program showing the use of the DifferentialDrive class. The
@@ -27,23 +33,26 @@
  * instead if you're new.
  */
 class Robot : public frc::SampleRobot {
- public:
-  Robot();
+    public:
+    Robot();
 
-  void RobotInit() override;
-  void Autonomous() override;
-  void OperatorControl() override;
-  void Test() override;
+    void RobotInit() override;
+    void Autonomous() override;
+    void OperatorControl() override;
+    void Test() override;
 
- private:
-  // Robot drive system
-  frc::PWMVictorSPX m_leftMotor{0};
-  frc::PWMVictorSPX m_rightMotor{1};
-  frc::DifferentialDrive m_robotDrive{m_leftMotor, m_rightMotor};
+    private:
+    // Robot drive system
+    WPI_VictorSPX frontLeft{10};
+    WPI_VictorSPX frontRight{9};
+    WPI_TalonSRX backLeft{7};
+    WPI_TalonSRX backRight{8};
 
-  frc::Joystick m_stick{0};
+    frc::MecanumDrive drive{frontLeft, backLeft, frontRight, backRight};
 
-  frc::SendableChooser<std::string> m_chooser;
-  const std::string kAutoNameDefault = "Default";
-  const std::string kAutoNameCustom = "My Auto";
+    frc::XboxController controller{0};
+
+    frc::SendableChooser<std::string> m_chooser;
+    const std::string kAutoNameDefault = "Default";
+    const std::string kAutoNameCustom = "My Auto";
 };
