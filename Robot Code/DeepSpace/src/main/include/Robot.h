@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <string>
+#include <math.h>
 
 #include "ctre/Phoenix.h"
 

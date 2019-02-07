@@ -71,10 +71,29 @@ void Robot::Autonomous() {
  */
 void Robot::OperatorControl() {
     drive.SetSafetyEnabled(true);
-    frontLeft.SetInverted(true);
-    backRight.SetInverted(true);
-    while (IsOperatorControl() && IsEnabled()) {
-        drive.DriveCartesian(controller.GetY(frc::GenericHID::JoystickHand::kLeftHand), controller.GetX(frc::GenericHID::JoystickHand::kLeftHand), controller.GetX(frc::GenericHID::JoystickHand::kRightHand));
+    double deadband = .1;
+    double yAxis;
+    double xAxis;
+    double zAxis;
+    while (IsOperatorControl() && IsEnabled()) 
+    {
+        xAxis = pow(controller.GetX(frc::GenericHID::JoystickHand::kLeftHand), 3);
+        yAxis = pow(controller.GetY(frc::GenericHID::JoystickHand::kLeftHand), 3);
+        zAxis = pow(controller.GetX(frc::GenericHID::JoystickHand::kRightHand), 3);
+
+        if(abs(controller.GetX(frc::GenericHID::JoystickHand::kLeftHand)) < deadband)
+        {
+            xAxis = 0;
+        }
+        if(abs(controller.GetY(frc::GenericHID::JoystickHand::kLeftHand)) < deadband)
+        {
+            yAxis = 0;
+        }
+        if(abs(controller.GetX(frc::GenericHID::JoystickHand::kRightHand)) < deadband)
+        {
+            zAxis = 0;
+        }
+        drive.DriveCartesian(xAxis, -yAxis, zAxis);
         // The motors will be updated every 5ms
         frc::Wait(0.005);
     }
