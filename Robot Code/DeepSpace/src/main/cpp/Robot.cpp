@@ -105,7 +105,7 @@ void Robot::OperatorControl() {
 
         if(controller.GetTriggerAxis(leftHand) > controller.GetTriggerAxis(rightHand))
         {
-            elevator.Set(pow(controller.GetTriggerAxis(-leftHand), axisExponent));
+            elevator.Set(-pow(controller.GetTriggerAxis(leftHand), axisExponent));
         }
         else
         {
