@@ -20,6 +20,11 @@ void Robot::RobotInit() {
     m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
     m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
     frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+
+    frontLeft.ConfigNeutralDeadband(deadbandPercent, 0);
+    frontRight.ConfigNeutralDeadband(deadbandPercent, 0);
+    backLeft.ConfigNeutralDeadband(deadbandPercent, 0);
+    backRight.ConfigNeutralDeadband(deadbandPercent, 0);
 }
 
 /**
@@ -71,34 +76,58 @@ void Robot::Autonomous() {
  */
 void Robot::OperatorControl() {
     drive.SetSafetyEnabled(true);
-    double deadband = .1;
+
     double yAxis;
     double xAxis;
     double zAxis;
+    
     while (IsOperatorControl() && IsEnabled()) 
     {
-        xAxis = pow(controller.GetX(frc::GenericHID::JoystickHand::kLeftHand), 3);
-        yAxis = pow(controller.GetY(frc::GenericHID::JoystickHand::kLeftHand), 3);
-        zAxis = pow(controller.GetX(frc::GenericHID::JoystickHand::kRightHand), 3);
-
-        if(abs(controller.GetX(frc::GenericHID::JoystickHand::kLeftHand)) < deadband)
-        {
-            xAxis = 0;
-        }
-        if(abs(controller.GetY(frc::GenericHID::JoystickHand::kLeftHand)) < deadband)
-        {
-            yAxis = 0;
-        }
-        if(abs(controller.GetX(frc::GenericHID::JoystickHand::kRightHand)) < deadband)
-        {
-            zAxis = 0;
-        }
+        xAxis = pow(controller.GetX(leftHand), axisExponent);
+        yAxis = pow(controller.GetY(leftHand), axisExponent);
+        zAxis = pow(controller.GetX(rightHand), axisExponent);
         drive.DriveCartesian(xAxis, -yAxis, zAxis);
+
+        bar.Set(pow(controller.GetY(rightHand), axisExponent));
+
+        if(controller.GetBumper(leftHand) == 1)
+        {
+            intake.Set(-1);
+        }
+        else if(controller.GetBumper(rightHand) == 1)
+        {
+            intake.Set(1);
+        }
+        else
+        {
+            intake.Set(0);
+        }
+
+        if(controller.GetTriggerAxis(leftHand) > controller.GetTriggerAxis(rightHand))
+        {
+            elevator.Set(pow(controller.GetTriggerAxis(-leftHand), axisExponent));
+        }
+        else
+        {
+            elevator.Set(-pow(controller.GetTriggerAxis(rightHand), axisExponent));
+        }
         // The motors will be updated every 5ms
         frc::Wait(0.005);
     }
 }
 
+void Robot::low()
+{
+
+}
+void Robot::mid()
+{
+
+}
+void Robot::high()
+{
+
+}
 /**
  * Runs during test mode
  */

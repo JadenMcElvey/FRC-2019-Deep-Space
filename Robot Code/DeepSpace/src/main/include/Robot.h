@@ -42,18 +42,35 @@ class Robot : public frc::SampleRobot {
     void OperatorControl() override;
     void Test() override;
 
+    void low();
+    void mid();
+    void high();
+
     private:
     // Robot drive system
     WPI_VictorSPX frontLeft{10};
     WPI_VictorSPX frontRight{9};
     WPI_TalonSRX backLeft{7};
     WPI_TalonSRX backRight{8};
+    WPI_TalonSRX elevatorOne{5};
+    WPI_TalonSRX elevatorTwo{6};
+    WPI_TalonSRX barOne{3};
+    WPI_TalonSRX barTwo{4};
+    frc::Spark f{27};
 
+    frc::SpeedControllerGroup elevator{elevatorOne, elevatorTwo};
+    frc::SpeedControllerGroup bar{barOne, barTwo};
+    frc::SpeedControllerGroup intake{f};
     frc::MecanumDrive drive{frontLeft, backLeft, frontRight, backRight};
 
+    const frc::GenericHID::JoystickHand leftHand = frc::GenericHID::JoystickHand::kLeftHand;
+    const frc::GenericHID::JoystickHand rightHand = frc::GenericHID::JoystickHand::kRightHand;
     frc::XboxController controller{0};
 
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";
     const std::string kAutoNameCustom = "My Auto";
+
+    const int deadbandPercent = 10;
+    const int axisExponent = 3;
 };
