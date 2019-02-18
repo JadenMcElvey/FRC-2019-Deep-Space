@@ -46,6 +46,9 @@ class Robot : public frc::SampleRobot {
     void mid();
     void high();
 
+    void dashboardDiagnostic();
+    void sensorPrep();
+
     private:
     // Robot drive system
     WPI_VictorSPX frontLeft{10};
@@ -56,21 +59,29 @@ class Robot : public frc::SampleRobot {
     WPI_TalonSRX elevatorTwo{6};
     WPI_TalonSRX barOne{3};
     WPI_TalonSRX barTwo{4};
-    frc::Spark f{27};
+    frc::Spark intake{0};
 
     frc::SpeedControllerGroup elevator{elevatorOne, elevatorTwo};
     frc::SpeedControllerGroup bar{barOne, barTwo};
-    frc::SpeedControllerGroup intake{f};
+    
     frc::MecanumDrive drive{frontLeft, backLeft, frontRight, backRight};
 
     const frc::GenericHID::JoystickHand leftHand = frc::GenericHID::JoystickHand::kLeftHand;
     const frc::GenericHID::JoystickHand rightHand = frc::GenericHID::JoystickHand::kRightHand;
+
+    const ctre::phoenix::motorcontrol::FeedbackDevice pulseWidth = ctre::phoenix::motorcontrol::FeedbackDevice::PulseWidthEncodedPosition;
     frc::XboxController controller{0};
+
+    frc::PowerDistributionPanel power{1};
 
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";
     const std::string kAutoNameCustom = "My Auto";
 
-    const int deadbandPercent = 10;
-    const int axisExponent = 3;
+    const double deadbandPercent = .0005;
+    const double axisExponent = 3;
+    const double powerMax = .8;
+    const double driveEncoderScaler = 0.0061359232;
+    const double elevatorEncoderScaler = 0.0010983302;
+    const double barEncoderScaler = 0.009765625;
 };
