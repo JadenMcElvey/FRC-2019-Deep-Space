@@ -78,9 +78,11 @@ class Robot : public frc::SampleRobot {
     const std::string kAutoNameDefault = "Default";
     const std::string kAutoNameCustom = "My Auto";
 
-    const double deadbandPercent = .0005;
+    const double deadbandPercent = .0005;//try 1? i think the "deadzones" are really just a
+                                         //large area with too little power to move at all
     const double axisExponent = 3;
     const double powerMax = .8;
+    const double powerScaler = .35;
     const double driveEncoderScaler = 0.0061359232;
     const double elevatorEncoderScaler = 0.0010983302;
     const double barEncoderScaler = 0.009765625;

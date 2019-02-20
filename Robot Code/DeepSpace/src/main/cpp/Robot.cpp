@@ -17,7 +17,7 @@ Robot::Robot() {
 }
 
 void Robot::RobotInit() {
-    frc::CameraServer::GetInstance()->StartAutomaticCapture();
+    frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
 
     frontLeft.ConfigNeutralDeadband(deadbandPercent, 0);
     frontRight.ConfigNeutralDeadband(deadbandPercent, 0);
@@ -84,6 +84,12 @@ void Robot::OperatorControl() {
     double zAxis;
     double elevatorSpeed;
     double barSpeed;
+
+    bool automatic = false;
+    bool manual = false;
+    bool blow = false;
+    bool bmid = false;
+    bool bhigh = false;
     
     while (IsOperatorControl() && IsEnabled()) 
     {//2500,7000,10100.9200
@@ -94,51 +100,87 @@ void Robot::OperatorControl() {
         drive.DriveCartesian(xAxis, -yAxis, zAxis);
 
         barSpeed = pow(controller.GetY(rightHand), axisExponent);
-        barSpeed -= .15;
-        barSpeed = (barSpeed > powerMax) ? powerMax : barSpeed;
-        bar.Set(-barSpeed);
+        barSpeed *= powerScaler;
+        barSpeed -= .1;
         
+        elevatorSpeed = pow(controller.GetTriggerAxis(rightHand)-controller.GetTriggerAxis(leftHand), axisExponent);
+        elevatorSpeed += .1;
+        elevatorSpeed = (elevatorSpeed > powerMax) ? powerMax : elevatorSpeed;
+        elevatorSpeed = (elevatorSpeed < -powerMax) ? -powerMax : elevatorSpeed;
+
         if(controller.GetBumper(leftHand) == 1)
         {
-            intake.Set(-.5);
+            intake.Set(-.8);
         }
         else if(controller.GetBumper(rightHand) == 1)
         {
             intake.Set(.5);
+            automatic = false;
+            manual = false;
         }
         else
         {
             intake.Set(0);
         }
-
-        if(controller.GetTriggerAxis(leftHand) > controller.GetTriggerAxis(rightHand))
+        if(automatic)
         {
-            elevatorSpeed = pow(controller.GetTriggerAxis(leftHand), axisExponent);
-            elevatorSpeed += .1;
-            elevatorSpeed = (elevatorSpeed > powerMax) ? powerMax : elevatorSpeed;
-            elevator.Set(-elevatorSpeed);
+            if(blow)
+            {
+                low();
+            }
+            if(bmid)
+            {
+                mid();
+            }
+            if(bhigh)
+            {
+                high();
+            }
+        }
+        else if(manual)
+        {
+            bar.Set(-barSpeed);
+            elevator.Set(elevatorSpeed);
         }
         else
         {
-            elevatorSpeed = pow(controller.GetTriggerAxis(rightHand), axisExponent);
-            elevatorSpeed += .1;
-            elevatorSpeed = (elevatorSpeed > powerMax) ? powerMax : elevatorSpeed;
-            elevator.Set(elevatorSpeed);
+            bar.Set(0);
+            elevator.Set(-.1);
         }
+
         if(controller.GetAButton())
         {
-            barTwo.Set(ControlMode::MotionMagic, 2500);
-            barOne.Follow(barTwo);
+            automatic = true;
+            manual = false;
+            blow = true;
+            bmid = false;
+            bhigh = false;
         }
         if(controller.GetXButton())
         {
-            barTwo.Set(ControlMode::MotionMagic, 7100);
-            barOne.Follow(barTwo);
+            automatic = true;
+            manual = false;
+            blow = false;
+            bmid = true;
+            bhigh = false;
         }
         if(controller.GetYButton())
         {
-            barTwo.Set(ControlMode::MotionMagic, 9500);
-            barOne.Follow(barTwo);
+            automatic = true;
+            manual = false;
+            blow = false;
+            bmid = false;
+            bhigh = true;
+        }
+        if(controller.GetBButton())
+        {
+            automatic = false;
+            manual = false;
+        }
+        if(controller.GetTriggerAxis(leftHand) || controller.GetTriggerAxis(rightHand) || (abs(controller.GetY(rightHand)) > .1))
+        {
+            automatic = false;
+            manual = true;
         }
         // The motors will be updated every 5ms
         dashboardDiagnostic();
@@ -149,15 +191,18 @@ void Robot::OperatorControl() {
 
 void Robot::low()
 {
-
+    barTwo.Set(ControlMode::MotionMagic, 2500);
+    barOne.Follow(barTwo);
 }
 void Robot::mid()
 {
-
+    barTwo.Set(ControlMode::MotionMagic, 7100);
+    barOne.Follow(barTwo);
 }
 void Robot::high()
 {
-
+    barTwo.Set(ControlMode::MotionMagic, 9500);
+    barOne.Follow(barTwo);
 }
 void Robot::dashboardDiagnostic()
 {    
@@ -211,21 +256,22 @@ void Robot::sensorPrep()
     barTwo.SetInverted(true);
     barTwo.SetStatusFramePeriod(StatusFrameEnhanced::Status_10_MotionMagic, 10, 10);
 
-    barTwo.ConfigNominalOutputForward(.25, 10);
+    barTwo.ConfigNominalOutputForward(.1, 10);
     barTwo.ConfigNominalOutputReverse(0, 10);
     barTwo.ConfigPeakOutputForward(1, 10);
     barTwo.ConfigPeakOutputReverse(-1, 10);
+    barTwo.ConfigMaxIntegralAccumulator(0, 50,-10);
 
     barTwo.SelectProfileSlot(0, 0);
-    barTwo.Config_kF(0, 1, 10);
-    barTwo.Config_kP(0, 0.05, 10);
+    barTwo.Config_kF(0, .2, 10);
+    barTwo.Config_kP(0, 3, 10);
     barTwo.Config_kI(0, 0, 10);
-    barTwo.Config_kD(0, 0, 10);
+    barTwo.Config_kD(0, 50, 10);
 
-    barTwo.ConfigMotionCruiseVelocity(850, 10);
-    barTwo.ConfigMotionAcceleration(1500, 10);
-    //barTwo.ConfigAllowableClosedloopError(0, 100, 0);
-
+    barTwo.ConfigMotionCruiseVelocity(4500, 10);
+    barTwo.ConfigMotionAcceleration(4500, 10);
+    barTwo.ConfigAllowableClosedloopError(0, 250, 0);
+/*
     elevatorTwo.SetSensorPhase(true);
     elevatorTwo.SetStatusFramePeriod(StatusFrameEnhanced::Status_13_Base_PIDF0, 10, 10);
 
@@ -247,8 +293,8 @@ void Robot::sensorPrep()
     backRight.SetSelectedSensorPosition(0, 0, 0);
     elevatorTwo.SetSelectedSensorPosition(0, 0, 0);
     barTwo.SetSelectedSensorPosition(0, 0, 0);
-
-}
+*/
+} 
 /**
  * Runs during test mode
  */
